@@ -1,0 +1,23 @@
+# Игнорирование скачанных репозиториев примеров и шаблонов Barotrauma
+BaseBaroPlugin/
+ExamplesBaroPlugin/
+
+# Временные файлы и конфигурации IDE
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Сборка и бинарники (если появятся)
+[Bb]in/
+[Oo]bj/
+Build/
+LocalMods/
+
+# Системные файлы ОС
+.DS_Store
+Thumbs.db
+desktop.ini

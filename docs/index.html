@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barotrauma Plugin DevHub — Руководство по C# плагинам</title>
+  <meta name="description" content="Интерактивное руководство и примеры разработки C# плагинов для Barotrauma (.NET 8 / FakeFish Plugin System).">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Header & Navigation -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+            <path d="M2 12h20"></path>
+          </svg>
+        </div>
+        <div>
+          <span class="brand-title">BAROTRAUMA</span>
+          <span class="brand-badge">C# PLUGIN DOCS</span>
+        </div>
+      </div>
+
+      <div class="search-box">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="docSearch" placeholder="Поиск по API, хукам, примерам (Ctrl+K)...">
+        <span class="search-kbd">ESC</span>
+      </div>
+
+      <div class="header-links">
+        <a href="https://github.com/FakeFishGames/BaseBaroPlugin" target="_blank" rel="noopener" class="gh-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          BaseBaroPlugin
+        </a>
+        <a href="https://github.com/FakeFishGames/ExamplesBaroPlugin" target="_blank" rel="noopener" class="gh-link">
+          ExamplesBaroPlugin
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">ВВЕДЕНИЕ</div>
+          <a href="#overview" class="nav-link active">Обзор системы</a>
+          <a href="#requirements" class="nav-link">Требования и софт</a>
+          <a href="#quickstart" class="nav-link">Быстрый старт</a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">СТРУКТУРА И МАНИФЕСТЫ</div>
+          <a href="#project-structure" class="nav-link">Архитектура папок</a>
+          <a href="#props-config" class="nav-link">Конфигурация .props</a>
+          <a href="#manifests" class="nav-link">filelist.xml и PluginInfo.xml</a>
+          <a href="#lifecycle" class="nav-link">Жизненный цикл плагина</a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">ИНТЕРАКТИВНЫЕ ПРИМЕРЫ</div>
+          <a href="#example-item-component" class="nav-link">1. Кастомный ItemComponent</a>
+          <a href="#example-status-effect" class="nav-link">2. Status Effect Action</a>
+          <a href="#example-networking" class="nav-link">3. Сетевой обмен (Client/Server)</a>
+          <a href="#example-settings" class="nav-link">4. Настройки в меню игры</a>
+          <a href="#example-hooks" class="nav-link">5. Встроенные хуки игры</a>
+          <a href="#example-prefabs" class="nav-link">6. Кастомные XML префабы</a>
+          <a href="#example-harmony" class="nav-link">7. Патчинг HarmonyX</a>
+          <a href="#example-extrafields" class="nav-link">8. ExtraFields (состояние)</a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">РАЗРАБОТКА И РЕЛИЗ</div>
+          <a href="#debugging-hotreload" class="nav-link">Отладка и Hot Reload</a>
+          <a href="#build-release" class="nav-link">Мультиплатформенная сборка</a>
+          <a href="#memory-leaks" class="nav-link">Выгрузка и утечки памяти</a>
+          <a href="#checklist" class="nav-link">Чеклист готовности</a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- Hero Banner -->
+      <section class="hero-section">
+        <div class="hero-badge">ОФИЦИАЛЬНАЯ СИСТЕМА ПЛАГИНОВ FAKEFISH</div>
+        <h1 class="hero-title">Разработка C# плагинов для <span class="accent-text">Barotrauma</span></h1>
+        <p class="hero-subtitle">
+          Полное практическое руководство по созданию модов на .NET 8. Официальный нативный C# код, кроссплатформенность без сторонних инжекторов, прямой доступ к физике, сети, UI и игровой логике.
+        </p>
+
+        <div class="hero-stats">
+          <div class="stat-card">
+            <div class="stat-num">.NET 8</div>
+            <div class="stat-label">C# 10+, современный runtime</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">Win / Linux / Mac</div>
+            <div class="stat-label">Полная мультиплатформенность</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">Publicized</div>
+            <div class="stat-label">Доступ к приватным методам без Reflection</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">Hot Reload</div>
+            <div class="stat-label">Мгновенное применение правок кода</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Overview -->
+      <section id="overview" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 1</div>
+        <h2>Что такое новая система плагинов?</h2>
+        <p>
+          В тестовой ветке игры разработчики из <strong>FakeFish Games</strong> (при ключевом участии Evil Factory) добавили встроенную поддержку скомпилированных C#-плагинов. Больше не требуются сторонние костыли, инжекторы или динамическая перекомпиляция скриптов через LuaCs — теперь Barotrauma нативно загружает предварительно скомпилированные `.dll` сборки через изолированный <code>AssemblyLoadContext</code>.
+        </p>
+
+        <div class="grid-2col">
+          <div class="card info-card">
+            <div class="card-icon">⚡</div>
+            <h3>Почему это меняет всё?</h3>
+            <ul>
+              <li><strong>Официальная поддержка:</strong> Никаких патчей `Barotrauma.exe` сторонними программами.</li>
+              <li><strong>Максимальная скорость:</strong> Код компилируется вашим IDE напрямую в машинный код через JIT .NET 8.</li>
+              <li><strong>Доступ к ядру:</strong> Специальные пакеты <code>Barotrauma.ReferenceAssemblies.Vanilla.Publicized</code> открывают доступ ко всем приватным полям движка без Reflection.</li>
+              <li><strong>Сетевой стек:</strong> Встроенные механизмы передачи кастомных сообщений между клиентом и сервером.</li>
+            </ul>
+          </div>
+
+          <div class="card warning-card">
+            <div class="card-icon">⚠️</div>
+            <h3>Важное отличие от классических XML-модов</h3>
+            <p>
+              C# плагин может изменять базовое поведение игры, физику, сетевые пакеты и генерировать свой интерфейс. Однако он требует осторожности: если плагин запустит бесконечный поток или не очистит ссылки при выгрузке, игра не сможет выгрузить память сборки (Assembly Unload Leak). В руководстве подробно описано, как этого избегать.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Requirements -->
+      <section id="requirements" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 2</div>
+        <h2>Требования и подготовка окружения</h2>
+        <p>Для разработки плагинов вам понадобится современный инструментарий с поддержкой <strong>.NET 8.0 SDK</strong>:</p>
+
+        <div class="tools-grid">
+          <div class="tool-card">
+            <div class="tool-header">
+              <span class="tool-tag">РЕКОМЕНДУЕТСЯ</span>
+              <h4>Visual Studio 2022</h4>
+            </div>
+            <p>Версия 17.8 или новее. При установке выберите рабочую нагрузку <em>«Разработка классических приложений .NET»</em> (Desktop Development).</p>
+            <span class="tool-feature">Встроенный отладчик + Hot Reload по Alt+F10</span>
+          </div>
+
+          <div class="tool-card">
+            <div class="tool-header">
+              <span class="tool-tag">АЛЬТЕРНАТИВА</span>
+              <h4>JetBrains Rider</h4>
+            </div>
+            <p>Версия 2023.3 или новее. Отличная поддержка мультитаргетинга, навигации по декомпилированному коду и .NET 8.</p>
+            <span class="tool-feature">Идеально подходит для Linux и macOS</span>
+          </div>
+
+          <div class="tool-card">
+            <div class="tool-header">
+              <span class="tool-tag">ОБЯЗАТЕЛЬНО</span>
+              <h4>.NET 8.0 SDK</h4>
+            </div>
+            <p>Официальный SDK от Microsoft. Проверьте установку в консоли командой <code>dotnet --version</code> (должна быть 8.x.x).</p>
+            <span class="tool-feature">Требуется для компиляции проектов</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Quickstart -->
+      <section id="quickstart" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 3</div>
+        <h2>Быстрый старт: пошаговая инструкция</h2>
+
+        <div class="steps-list">
+          <div class="step-item">
+            <div class="step-badge">Шаг 1</div>
+            <div class="step-body">
+              <h4>Склонируйте шаблон BaseBaroPlugin</h4>
+              <p>Используйте готовый шаблон от FakeFish Games со всеми настроенными ссылками на NuGet:</p>
+              <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+                <pre><code>git clone https://github.com/FakeFishGames/BaseBaroPlugin.git MyFirstPlugin
+cd MyFirstPlugin</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-badge">Шаг 2</div>
+            <div class="step-body">
+              <h4>Задайте имя плагина в BuildData.props</h4>
+              <p>Откройте файл <code>BuildData.props</code> в корне проекта и измените <code>ModName</code>:</p>
+              <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+                <pre><code>&lt;Project&gt;
+  &lt;PropertyGroup&gt;
+    &lt;!-- Без пробелов, русских букв и спецсимволов! --&gt;
+    &lt;ModName&gt;MyFirstPlugin&lt;/ModName&gt;
+    &lt;RepositoryURL&gt;https://github.com/YourName/MyFirstPlugin&lt;/RepositoryURL&gt;
+
+    &lt;!-- Поставьте true для доступа к приватным полям игры без Reflection --&gt;
+    &lt;UsePublicizedAssemblies&gt;false&lt;/UsePublicizedAssemblies&gt;
+  &lt;/PropertyGroup&gt;
+
+  &lt;Import Project="UserBuildData.props" /&gt;
+&lt;/Project&gt;</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-badge">Шаг 3</div>
+            <div class="step-body">
+              <h4>Настройте путь к игре в UserBuildData.props</h4>
+              <p>Скопируйте <code>UserBuildData.props.example</code> и назовите файл <code>UserBuildData.props</code>. Внутри укажите путь к папке <code>LocalMods</code> вашей Barotrauma:</p>
+              <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+                <pre><code>&lt;Project&gt;
+  &lt;PropertyGroup&gt;
+    &lt;!-- Путь к LocalMods игры. При каждой сборке файлы мода скопируются сюда автоматически --&gt;
+    &lt;ModDeployDir&gt;C:\Program Files (x86)\Steam\steamapps\common\Barotrauma\LocalMods&lt;/ModDeployDir&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-badge">Шаг 4</div>
+            <div class="step-body">
+              <h4>Откройте WindowsSolution.sln и запустите игру с отладкой</h4>
+              <p>Откройте <code>WindowsSolution.sln</code> в вашей IDE. В меню запуска выберите профиль <strong>"Launch Barotrauma"</strong> и нажмите <strong>F5</strong>.</p>
+              <p>IDE скомпилирует плагин, разложит файлы в <code>LocalMods</code> и запустит Barotrauma с подключенным отладчиком!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Project Structure -->
+      <section id="project-structure" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 4</div>
+        <h2>Архитектура папок и разделение кода</h2>
+        <p>Шаблон использует модульное разделение на клиентский, серверный и общий код:</p>
+
+        <div class="structure-diagram">
+          <div class="structure-item highlight">
+            <div class="struct-title">📁 SharedProject / SharedSource / Plugin.cs</div>
+            <div class="struct-desc"><strong>Общий код для клиента и сервера.</strong> Здесь находится реализация <code>IBarotraumaPlugin</code>, регистрация сервисов, общих сущностей и физики. Для специфичных блоков можно использовать директивы <code>#if CLIENT</code> и <code>#if SERVER</code>.</div>
+          </div>
+          <div class="structure-item">
+            <div class="struct-title">📁 ClientProject / ClientSource / PluginClient.cs</div>
+            <div class="struct-desc"><strong>Клиентский код.</strong> Интерфейс (GUI), визуальные эффекты, частицы, звуки, рендер, обработка клавиатуры игрока. Компилируется с флагом <code>CLIENT</code> в <code>$(ModName)Client.dll</code>.</div>
+          </div>
+          <div class="structure-item">
+            <div class="struct-title">📁 ServerProject / ServerSource / PluginServer.cs</div>
+            <div class="struct-desc"><strong>Серверный код.</strong> Авторитарная логика выделенного сервера, античит, обработка прав игроков, сохранение состояния. Компилируется в <code>$(ModName)Server.dll</code>.</div>
+          </div>
+          <div class="structure-item">
+            <div class="struct-title">📁 ContentPackageBuilder / Content /</div>
+            <div class="struct-desc"><strong>Пакет мода.</strong> Хранилище ваших XML файлов, спрайтов, предметов и префабов. При компиляции автоматически копируется в <code>LocalMods/$(ModName)/Content</code>.</div>
+          </div>
+          <div class="structure-item">
+            <div class="struct-title">📁 PluginToolbox /</div>
+            <div class="struct-desc"><strong>Утилита компиляции.</strong> Автоматизирует мультиплатформенную компиляцию всех 6 проектов (Windows/Linux/Mac для Client/Server) одной командой для отправки в Steam Workshop.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Manifests -->
+      <section id="manifests" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 5</div>
+        <h2>Манифесты: filelist.xml и PluginInfo.xml</h2>
+
+        <div class="tabs-container">
+          <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab(this, 'tab-filelist')">filelist.xml</button>
+            <button class="tab-btn" onclick="switchTab(this, 'tab-plugininfo')">PluginInfo.xml</button>
+          </div>
+
+          <div id="tab-filelist" class="tab-content active">
+            <p>В файле <code>filelist.xml</code> объявляется пакет контента. Появился новый тег <code>&lt;PluginInfo&gt;</code>:</p>
+            <div class="code-wrapper">
+              <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+              <pre><code>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;ContentPackage name="%ModName%"&gt;
+  &lt;!-- Указывает движку, что мод содержит нативный C# плагин --&gt;
+  &lt;PluginInfo file="%ModDir%/PluginInfo.xml" /&gt;
+
+  &lt;!-- Стандартные файлы контента мода --&gt;
+  &lt;Item file="%ModDir%/Content/Items.xml" /&gt;
+&lt;/ContentPackage&gt;</code></pre>
+            </div>
+          </div>
+
+          <div id="tab-plugininfo" class="tab-content">
+            <p>В <code>PluginInfo.xml</code> указываются пути к `.dll` файлам для каждой операционной системы:</p>
+            <div class="code-wrapper">
+              <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+              <pre><code>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;PluginInfos notsyncedinmultiplayer="false"&gt;
+  &lt;!-- Windows сборки --&gt;
+  &lt;MainAssemblyInfo assemblypath="%ModDir%/Windows/%ModName%Server.dll" platforms="Windows" targets="Server" /&gt;
+  &lt;MainAssemblyInfo assemblypath="%ModDir%/Windows/%ModName%Client.dll" platforms="Windows" targets="Client" /&gt;
+
+  &lt;!-- Linux сборки --&gt;
+  &lt;MainAssemblyInfo assemblypath="%ModDir%/Linux/%ModName%Server.dll" platforms="Linux" targets="Server" /&gt;
+  &lt;MainAssemblyInfo assemblypath="%ModDir%/Linux/%ModName%Client.dll" platforms="Linux" targets="Client" /&gt;
+
+  &lt;!-- macOS сборки --&gt;
+  &lt;MainAssemblyInfo assemblypath="%ModDir%/Mac/%ModName%Server.dll" platforms="Mac" targets="Server" /&gt;
+  &lt;MainAssemblyInfo assemblypath="%ModDir%/Mac/%ModName%Client.dll" platforms="Mac" targets="Client" /&gt;
+&lt;/PluginInfos&gt;</code></pre>
+            </div>
+            <div class="tip-box">
+              <strong>Совет:</strong> Установите <code>notsyncedinmultiplayer="true"</code>, если ваш мод чисто клиентский (кастомный UI, бинды клавиш, счетчики) и игроки могут заходить с ним на любые сервера без требования наличия мода на сервере.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Lifecycle -->
+      <section id="lifecycle" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 6</div>
+        <h2>Жизненный цикл плагина (IBarotraumaPlugin)</h2>
+        <p>Каждый плагин реализует интерфейс <code>IBarotraumaPlugin</code> с тремя ключевыми методами:</p>
+
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+          <pre><code>using Barotrauma;
+using Barotrauma.Plugins;
+using Microsoft.Xna.Framework;
+
+namespace MyAwesomeMod;
+
+public partial class Plugin : IBarotraumaPlugin
+{
+    // Сервисы движка получаем через статический провайдер
+    public static readonly IDebugConsole DebugConsole = PluginServiceProvider.GetService&lt;IDebugConsole&gt;();
+
+    /// &lt;summary&gt;
+    /// 1. Вызывается сразу при загрузке сборки в память.
+    /// Идеально для регистрации хуков, компонентов, настроек и патчей Harmony.
+    /// &lt;/summary&gt;
+    public void Init()
+    {
+        DebugConsole.NewMessage("Плагин загружен!", Color.Lime);
+        InitProjectSpecific(); // Вызов клиентской или серверной реализации
+    }
+
+    public partial void InitProjectSpecific();
+
+    /// &lt;summary&gt;
+    /// 2. Вызывается после того, как все XML-файлы и пакеты контента загружены.
+    /// Здесь безопасно читать ItemPrefab.Prefabs, локации и субмарины.
+    /// &lt;/summary&gt;
+    public void OnContentLoaded()
+    {
+        
+    }
+
+    /// &lt;summary&gt;
+    /// 3. Вызывается при отключении плагина, смене модов или выходе.
+    /// ОБЯЗАТЕЛЬНО останавливайте потоки и очищайте подписки на события!
+    /// &lt;/summary&gt;
+    public void Dispose()
+    {
+        DebugConsole.NewMessage("Плагин выгружен.", Color.OrangeRed);
+    }
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- Section: Examples Gallery -->
+      <section class="content-block">
+        <div class="section-tag">РАЗДЕЛ 7</div>
+        <h2>Интерактивная галерея примеров (Examples Hub)</h2>
+        <p>Ниже собраны готовые практические рецепты для решения самых популярных задач мододелов.</p>
+
+        <!-- Example 1: Custom ItemComponent -->
+        <div id="example-item-component" class="example-card">
+          <div class="example-header">
+            <span class="example-num">01</span>
+            <div>
+              <h3>Кастомный компонент предмета (ItemComponent)</h3>
+              <p>Создание компонента предмета с собственной физикой, поведением в реальном времени и параметрами в XML.</p>
+            </div>
+          </div>
+
+          <div class="tabs-container">
+            <div class="tabs-header">
+              <button class="tab-btn active" onclick="switchTab(this, 'c-comp-cs')">C# Логика</button>
+              <button class="tab-btn" onclick="switchTab(this, 'c-comp-xml')">XML Предмета</button>
+              <button class="tab-btn" onclick="switchTab(this, 'c-comp-reg')">Регистрация в Plugin.cs</button>
+            </div>
+
+            <div id="c-comp-cs" class="tab-content active">
+              <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+                <pre><code>using Barotrauma;
+using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
+
+namespace MyAwesomeMod;
+
+public class SpinnerComponent : ItemComponent
+{
+    // Атрибут [Serialize] связывает XML-атрибут с C# свойством
+    [Serialize(500f, IsPropertySaveable.Yes, "Сила кручения предмета")]
+    public float SpinForce { get; private set; }
+
+    public SpinnerComponent(Item item, ContentXElement element) : base(item, element)
+    {
+        IsActive = true;
+    }
+
+    public override void Update(float deltaTime, Camera cam)
+    {
+        // Применяем крутящий момент к физическому телу предмета каждый кадр
+        if (item.body != null)
+        {
+            item.body.ApplyTorque(SpinForce * deltaTime);
+        }
+    }
+
+    protected override void RemoveComponentSpecific()
+    {
+        // Очистка при уничтожении предмета
+    }
+}</code></pre>
+              </div>
+            </div>
+
+            <div id="c-comp-xml" class="tab-content">
+              <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+                <pre><code>&lt;?xml version="1.0" encoding="utf-8" ?&gt;
+&lt;Items&gt;
+  &lt;Item name="Вращающийся диск" identifier="spinnerdisc" category="Misc"&gt;
+    &lt;Sprite texture="Content/Items/Misc/Misc.png" sourcerect="0,0,64,64" /&gt;
+    &lt;Body width="64" height="64" density="15" /&gt;
+    &lt;Holdable slots="Any,RightHand,LeftHand" /&gt;
+
+    &lt;!-- Наш C#-компонент прямо в XML! --&gt;
+    &lt;SpinnerComponent SpinForce="2500.0" /&gt;
+  &lt;/Item&gt;
+&lt;/Items&gt;</code></pre>
+              </div>
+            </div>
+
+            <div id="c-comp-reg" class="tab-content">
+              <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+                <pre><code>// Внутри метода Plugin.Init():
+var itemReg = PluginServiceProvider.GetService&lt;IItemComponentRegistrar&gt;();
+itemReg.RegisterItemComponent&lt;SpinnerComponent&gt;();
+
+// Либо одной строчкой зарегистрировать все компоненты в сборке:
+// itemReg.RegisterAllItemComponents();</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Example 2: Status Effect Action -->
+        <div id="example-status-effect" class="example-card">
+          <div class="example-header">
+            <span class="example-num">02</span>
+            <div>
+              <h3>Кастомное действие для StatusEffect</h3>
+              <p>Создание собственного тега действия внутри <code>&lt;StatusEffect&gt;</code> (например, отправка оповещения, вызов подкрепления или телепортация).</p>
+            </div>
+          </div>
+
+          <div class="tabs-container">
+            <div class="tabs-header">
+              <button class="tab-btn active" onclick="switchTab(this, 'c-se-cs')">C# Действие</button>
+              <button class="tab-btn" onclick="switchTab(this, 'c-se-xml')">XML Использование</button>
+            </div>
+
+            <div id="c-se-cs" class="tab-content active">
+              <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+                <pre><code>using Barotrauma;
+using Barotrauma.Plugins;
+using System.Xml.Linq;
+
+namespace MyAwesomeMod;
+
+public class BroadcastStatusEffectAction : IStatusEffectAction
+{
+    private readonly string _message;
+
+    public BroadcastStatusEffectAction(StatusEffect statusEffect, XElement element)
+    {
+        _message = element.GetAttributeString("message", "Внимание!");
+    }
+
+    public void Apply(StatusEffectParams effectParams)
+    {
+        Character? user = effectParams.Targets.OfType&lt;Character&gt;().FirstOrDefault();
+        string fullMessage = user != null ? $"{user.Name}: {_message}" : _message;
+
+#if SERVER
+        GameMain.Server.SendChatMessage(fullMessage, ChatMessageType.ServerMessageBoxInGame);
+#elif CLIENT
+        if (GameMain.NetworkMember is null) // Одиночная игра
+        {
+            new GUIMessageBox("Сообщение", fullMessage, type: GUIMessageBox.Type.InGame);
+        }
+#endif
+    }
+}
+
+// Регистрация в Plugin.Init():
+var seService = PluginServiceProvider.GetService&lt;IStatusEffectService&gt;();
+seService.RegisterAction(new StatusEffectActionFactory("Broadcast", 
+    (statusEffect, element) =&gt; new BroadcastStatusEffectAction(statusEffect, element)));</code></pre>
+              </div>
+            </div>
+
+            <div id="c-se-xml" class="tab-content">
+              <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+                <pre><code>&lt;Item name="Клаксон тревоги" identifier="alarmhorn"&gt;
+  &lt;RangedWeapon reload="1"&gt;
+    &lt;StatusEffect type="OnUse" target="Character"&gt;
+      &lt;!-- Наше кастомное C# действие! --&gt;
+      &lt;Broadcast message="СРОЧНО ВСЕМ НА БОЕВЫЕ ПОСТЫ!" /&gt;
+    &lt;/StatusEffect&gt;
+  &lt;/RangedWeapon&gt;
+&lt;/Item&gt;</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Example 3: Networking -->
+        <div id="example-networking" class="example-card">
+          <div class="example-header">
+            <span class="example-num">03</span>
+            <div>
+              <h3>Сетевой обмен Клиент ↔ Сервер (IGameNetwork)</h3>
+              <p>Строго типизированная передача сетевых сообщений без ручной сериализации байтов.</p>
+            </div>
+          </div>
+
+          <div class="code-wrapper">
+            <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+            <pre><code>using Barotrauma;
+using Barotrauma.Networking;
+using Barotrauma.Plugins;
+
+namespace MyAwesomeMod;
+
+// 1. Идентификаторы сетевых заголовков
+public enum ModNetHeader
+{
+    ClientPing,
+    ServerPong
+}
+
+// 2. Структуры пакетов данных (сериализуются автоматически движком)
+[NetworkSerialize]
+public readonly record struct PingData(string Note, int Timestamp) : INetSerializableStruct;
+
+[NetworkSerialize]
+public readonly record struct PongData(string ServerName, bool IsOk) : INetSerializableStruct;
+
+public static class NetworkManager
+{
+    public static void Register()
+    {
+        var net = PluginServiceProvider.GetService&lt;IGameNetwork&gt;();
+        net.RegisterNetworkHeaders&lt;ModNetHeader&gt;();
+
+#if SERVER
+        // Сервер слушает Ping от клиента и отвечает Pong
+        net.RegisterHandler&lt;ModNetHeader, PingData&gt;(ModNetHeader.ClientPing, (data, client) =&gt;
+        {
+            Plugin.DebugConsole.NewMessage($"Сервер получил пинг от {client.Name}: {data.Note}");
+            net.SendToClient(client, ModNetHeader.ServerPong, new PongData("Europa Alpha Server", true));
+        });
+#elif CLIENT
+        // Клиент слушает Pong от сервера
+        net.RegisterHandler&lt;ModNetHeader, PongData&gt;(ModNetHeader.ServerPong, (data) =&gt;
+        {
+            Plugin.DebugConsole.NewMessage($"Клиент получил ответ: {data.ServerName}, Статус: {data.IsOk}");
+        });
+#endif
+    }
+
+    // Отправка с клиента на сервер
+    public static void SendPingToServer()
+    {
+#if CLIENT
+        var net = PluginServiceProvider.GetService&lt;IGameNetwork&gt;();
+        net.Send(ModNetHeader.ClientPing, new PingData("Hello from player", (int)Timing.TotalTime));
+#endif
+    }
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- Example 4: Settings -->
+        <div id="example-settings" class="example-card">
+          <div class="example-header">
+            <span class="example-num">04</span>
+            <div>
+              <h3>Настройки мода в интерфейсе игры (ISettingsService)</h3>
+              <p>Автоматическое добавление переключателей и слайдеров в меню настроек игры с синхронизацией по сети.</p>
+            </div>
+          </div>
+
+          <div class="code-wrapper">
+            <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+            <pre><code>using Barotrauma;
+using Barotrauma.Networking;
+using Barotrauma.Plugins;
+
+public static void SetupModSettings()
+{
+    var settings = PluginServiceProvider.GetService&lt;ISettingsService&gt;();
+
+    // 1. Булев чекбокс
+    settings.RegisterSetting(new BooleanSetting("enable_custom_hud".ToIdentifier(), defaultValue: true, label: "Включить кастомный HUD")
+    {
+        ShowInUI = true,
+        ToolTip = "Включает информационные виджеты плагина на экране",
+        SyncMode = SettingSyncMode.ClientPermissiveDesync // Настройка индивидуальна для каждого клиента
+    });
+
+    // 2. Слайдер множителя урона (авторитет сервера)
+    settings.RegisterSetting(new FloatSetting("damage_multiplier".ToIdentifier(), defaultValue: 1.0f, label: "Множитель урона")
+    {
+        ShowInUI = true,
+        UseSlider = true,
+        Range = (0.5f, 5.0f),
+        StepValue = 0.5f,
+        LabelFunc = val =&gt; $"{val:0.0}x",
+        SyncMode = SettingSyncMode.ServerAuthority, // Только хост/сервер решает значение
+        IsAllowedToSet = (setting, client) =&gt; client?.Permissions.HasFlag(ClientPermissions.ManageRound) ?? true
+    });
+}
+
+// Чтение значения в коде:
+float mult = PluginServiceProvider.GetService&lt;ISettingsService&gt;()
+    .RetrieveSetting&lt;FloatSetting&gt;("damage_multiplier".ToIdentifier())?.Value ?? 1.0f;</code></pre>
+          </div>
+        </div>
+
+        <!-- Example 5: Hooks -->
+        <div id="example-hooks" class="example-card">
+          <div class="example-header">
+            <span class="example-num">05</span>
+            <div>
+              <h3>Встроенные хуки игры (ISimpleHookService)</h3>
+              <p>Безопасные события начала/конца раундов, загрузки и сохранения кампании.</p>
+            </div>
+          </div>
+
+          <div class="code-wrapper">
+            <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+            <pre><code>var hooks = PluginServiceProvider.GetService&lt;ISimpleHookService&gt;();
+
+// Старт раунда
+hooks.RegisterHook&lt;PluginRoundStartedDelegate&gt;((GameSession session) =&gt;
+{
+    Plugin.DebugConsole.NewMessage("Раунд начался! Удачного плавания.");
+});
+
+// Завершение раунда
+hooks.RegisterHook&lt;PluginRoundEndedDelegate&gt;((GameSession session) =&gt;
+{
+    Plugin.DebugConsole.NewMessage("Раунд окончен. Подводим итоги...");
+});
+
+// Загрузка кампании (чтение сохраненного XML)
+hooks.RegisterHook&lt;PluginCampaignLoadDelegate&gt;((CampaignMode campaign, Option&lt;XElement&gt; saveXml, CampaignSettings settings) =&gt;
+{
+    if (saveXml.TryUnwrap(out XElement? element))
+    {
+        // Считываем наши кастомные сохраненные данные
+    }
+});</code></pre>
+          </div>
+        </div>
+
+        <!-- Example 6: Prefabs -->
+        <div id="example-prefabs" class="example-card">
+          <div class="example-header">
+            <span class="example-num">06</span>
+            <div>
+              <h3>Собственные XML-префабы (IContentFileRegistrar)</h3>
+              <p>Определение совершенно новых сущностей (квесты, фракции, рецепты), загружаемых движком через <code>filelist.xml</code>.</p>
+            </div>
+          </div>
+
+          <div class="code-wrapper">
+            <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+            <pre><code>// 1. Класс префаба
+public class RelicPrefab : Prefab
+{
+    public static readonly PrefabCollection&lt;RelicPrefab&gt; Prefabs = new();
+    public int AncientPower { get; }
+
+    public RelicPrefab(ContentFile file, ContentXElement element) 
+        : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
+    {
+        AncientPower = element.GetAttributeInt("power", 10);
+    }
+
+    public override void Dispose() { }
+}
+
+// 2. Класс файла для движка
+public class RelicFile : GenericPrefabFile&lt;RelicPrefab&gt;
+{
+    public RelicFile(ContentPackage package, ContentPath path) : base(package, path) { }
+
+    protected override bool MatchesSingular(Identifier id) =&gt; id == "Relic";
+    protected override bool MatchesPlural(Identifier id) =&gt; id == "Relics";
+    protected override RelicPrefab CreatePrefab(ContentXElement element) =&gt; new(this, element);
+    protected override PrefabCollection&lt;RelicPrefab&gt; Prefabs =&gt; RelicPrefab.Prefabs;
+}
+
+// 3. Регистрация в Plugin.Init():
+PluginServiceProvider.GetService&lt;IContentFileRegistrar&gt;().RegisterContentFile&lt;RelicFile&gt;();
+
+// Теперь в filelist.xml можно писать:
+// &lt;Relic file="%ModDir%/Content/Relics.xml" /&gt;</code></pre>
+          </div>
+        </div>
+
+        <!-- Example 7: Harmony -->
+        <div id="example-harmony" class="example-card">
+          <div class="example-header">
+            <span class="example-num">07</span>
+            <div>
+              <h3>Патчинг через HarmonyX (IHarmonyProvider)</h3>
+              <p>Внедрение в любые методы базовой игры Barotrauma с префиксами и постфиксами.</p>
+            </div>
+          </div>
+
+          <div class="code-wrapper">
+            <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+            <pre><code>using HarmonyLib;
+using Barotrauma;
+using Microsoft.Xna.Framework;
+
+namespace MyAwesomeMod;
+
+[HarmonyPatch]
+public static class OxygenPatch
+{
+    // Пример: изменение скорости потребления кислорода скафандра
+    [HarmonyPatch(typeof(Character), nameof(Character.UpdateOxygen)), HarmonyPrefix]
+    public static void UpdateOxygen_Prefix(Character __instance, float deltaTime)
+    {
+        // Кастомная логика перед вызовом оригинального метода
+    }
+}
+
+// В методе Plugin.Init() запускаем патчинг:
+PluginServiceProvider.GetService&lt;IHarmonyProvider&gt;().PatchAll();</code></pre>
+          </div>
+        </div>
+
+        <!-- Example 8: ExtraFields -->
+        <div id="example-extrafields" class="example-card">
+          <div class="example-header">
+            <span class="example-num">08</span>
+            <div>
+              <h3>Сохранение произвольных данных (ExtraFields)</h3>
+              <p>Прикрепление любых C#-объектов мода прямо к объектам карты кампании или экранам движка без изменения их классов.</p>
+            </div>
+          </div>
+
+          <div class="code-wrapper">
+            <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+            <pre><code>// Сохраняем объект собственного менеджера в карте кампании:
+campaign.Map.SetExtraField("MyModCampaignState", new MyCustomData());
+
+// В любом месте достаем его обратно:
+if (campaign.Map.GetExtraField&lt;MyCustomData&gt;("MyModCampaignState") is { } state)
+{
+    // Работаем с данными
+}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Debugging & Hot Reload -->
+      <section id="debugging-hotreload" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 8</div>
+        <h2>Отладка и Hot Reload (применение кода на лету)</h2>
+
+        <div class="grid-2col">
+          <div class="card">
+            <h3>🔥 Hot Reload в Visual Studio / Rider</h3>
+            <p>
+              .NET 8 поддерживает применение изменений без перезапуска Barotrauma!
+            </p>
+            <ol>
+              <li>Запустите игру с вашим модом (профиль <strong>"Launch Barotrauma"</strong>).</li>
+              <li>Если игра запущена отдельно, подключите отладчик: <strong>Debug → Attach to Process</strong> → выберите <code>Barotrauma.exe</code>.</li>
+              <li>Вносите изменения в тело методов вашего C# кода.</li>
+              <li>Нажмите иконку <strong>Hot Reload</strong> (или <kbd>Alt</kbd> + <kbd>F10</kbd>). Код обновится прямо в работающей игре!</li>
+            </ol>
+          </div>
+
+          <div class="card">
+            <h3>🐛 Отладка с точками останова (Breakpoints)</h3>
+            <p>
+              Поскольку сборка мода компилирует `.pdb` файлы отладочных символов:
+            </p>
+            <ul>
+              <li>Ставьте точки останова в любом месте вашего кода.</li>
+              <li>При срабатывании игра встанет на паузу, и вы сможете исследовать стек вызовов, значения переменных и состояние мира.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Build Release -->
+      <section id="build-release" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 9</div>
+        <h2>Мультиплатформенная сборка для релиза</h2>
+        <p>
+          Чтобы ваш мод работал у всех игроков (на Windows, Linux и Mac), используйте встроенную утилиту <strong>PluginToolbox</strong>:
+        </p>
+
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+          <pre><code># Запуск сборки всех проектов для всех платформ
+dotnet run --project PluginToolbox -- --build</code></pre>
+        </div>
+
+        <p>
+          Утилита автоматически соберет 6 бинарников в конфигурации <code>Release</code> и разложит их по подпапкам в <code>LocalMods/ВашМод/</code>:
+        </p>
+        <ul class="bullet-list">
+          <li><code>Windows/ВашМодClient.dll</code> и <code>Windows/ВашМодServer.dll</code></li>
+          <li><code>Linux/ВашМодClient.dll</code> и <code>Linux/ВашМодServer.dll</code></li>
+          <li><code>Mac/ВашМодClient.dll</code> и <code>Mac/ВашМодServer.dll</code></li>
+        </ul>
+      </section>
+
+      <!-- Section: Memory Leaks -->
+      <section id="memory-leaks" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 10</div>
+        <h2>Выгрузка модов и предотвращение утечек памяти</h2>
+        <div class="card warning-card">
+          <p>
+            Barotrauma использует изолированные <code>AssemblyLoadContext</code> (Collectible). Когда игрок перезагружает моды в меню или выходит в главное лобби, старая сборка мода выгружается из памяти сборщиком мусора (.NET GC).
+          </p>
+          <h4>Три золотых правила мододела:</h4>
+          <ol>
+            <li><strong>Останавливайте потоки:</strong> Любой бесконечный фоновый поток (<code>Thread</code>, <code>Task.Run</code>, <code>Timer</code>), запущенный плагином и не остановленный в <code>Dispose()</code>, заблокирует выгрузку сборки навсегда!</li>
+            <li><strong>Отписывайтесь от событий:</strong> Если вы подписались на статические события игры (например, <code>GameMain.OnResolutionChanged += ...</code>), обязательно отпишитесь в <code>Dispose()</code>.</li>
+            <li><strong>Используйте ExtraFields:</strong> Не храните постоянные ссылки на ваши C# типы в статических полях классов движка.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Section: Checklist -->
+      <section id="checklist" class="content-block">
+        <div class="section-tag">РАЗДЕЛ 11</div>
+        <h2>Интерактивный чеклист перед публикацией в Steam Workshop</h2>
+        <p>Отмечайте пройденные шаги перед публикацией вашего мода:</p>
+
+        <div class="checklist" id="publishChecklist">
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">Имя мода в <code>BuildData.props</code> состоит только из латинских букв и цифр, без пробелов.</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">Файл <code>ContentPackageBuilder/filelist.xml</code> содержит тег <code>&lt;PluginInfo file="%ModDir%/PluginInfo.xml" /&gt;</code>.</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">Имена `.dll` в <code>PluginInfo.xml</code> точно соответствуют имени мода (`%ModName%Client.dll`).</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">Реализован метод <code>Dispose()</code> с остановкой фоновых потоков и таймеров.</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">Выполнена мультиплатформенная сборка <code>dotnet run --project PluginToolbox -- --build</code>.</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">Мод протестирован в одиночной игре и на выделенном сервере (Dedicated Server).</span>
+          </label>
+        </div>
+
+        <div class="progress-box">
+          <div class="progress-label">Готовность к публикации: <span id="progressPercent">0%</span></div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Barotrauma C# Plugin Hub</strong> — Разработано для сообщества мододелов Barotrauma.
+      </div>
+      <div>
+        Официальные репозитории: 
+        <a href="https://github.com/FakeFishGames/BaseBaroPlugin" target="_blank">BaseBaroPlugin</a> · 
+        <a href="https://github.com/FakeFishGames/ExamplesBaroPlugin" target="_blank">ExamplesBaroPlugin</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
