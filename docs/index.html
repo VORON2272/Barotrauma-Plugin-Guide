@@ -139,7 +139,7 @@
             <ul>
               <li><strong>Официальная поддержка:</strong> Никаких патчей `Barotrauma.exe` сторонними программами.</li>
               <li><strong>Максимальная скорость:</strong> Код компилируется вашим IDE напрямую в машинный код через JIT .NET 8.</li>
-              <li><strong>Доступ к ядру:</strong> Специальные пакеты <code>Barotrauma.ReferenceAssemblies.Vanilla.Publicized</code> открывают доступ ко всем приватным полям движка без Reflection.</li>
+              <li><strong>Доступ к ядру:</strong> Пакеты <code>Barotrauma.ReferenceAssemblies.Vanilla.Publicized</code> открывают доступ к приватным полям игры без Reflection (требует атрибута <code>IgnoresAccessChecksTo</code> во избежание <code>FieldAccessException</code> в рантайме .NET 8).</li>
               <li><strong>Сетевой стек:</strong> Встроенные механизмы передачи кастомных сообщений между клиентом и сервером.</li>
             </ul>
           </div>
@@ -228,6 +228,20 @@ cd MyFirstPlugin</code></pre>
 
   &lt;Import Project="UserBuildData.props" /&gt;
 &lt;/Project&gt;</code></pre>
+              </div>
+
+              <div class="tip-box" style="margin-top: 15px; border-left-color: var(--accent-warning, #f59e0b);">
+                <strong>⚠️ Критически важно: Обязательные метаданные сборки (Authors и Version)</strong><br>
+                При загрузке плагина движок Barotrauma строго проверяет наличие автора и версии. Если метаданные отсутствуют, игра выдаст ошибку <code>Plugin ... is missing metadata: Authors</code> и откажется запускать плагин!<br>
+                Убедитесь, что в <code>SharedSource/AssemblyInfo.cs</code> или вашем <code>.csproj</code> указаны автор и версия игры:
+                <pre style="margin-top: 8px;"><code>[assembly: System.Reflection.AssemblyCompany("ВашНикнейм")]
+[assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
+[assembly: Barotrauma.PluginGameVersion("1.15.19.0")]
+
+// ВНИМАНИЕ: Если UsePublicizedAssemblies=true, ОБЯЗАТЕЛЬНО добавьте атрибуты ниже,
+// иначе в рантайме .NET 8 игра упадет с фатальной ошибкой System.FieldAccessException:
+[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo("Barotrauma")]
+[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo("BarotraumaCore")]</code></pre>
               </div>
             </div>
           </div>
@@ -392,6 +406,33 @@ public partial class Plugin : IBarotraumaPlugin
     }
 }</code></pre>
         </div>
+
+        <div class="card info-card" style="margin-top: 20px;">
+          <div class="card-icon">📁</div>
+          <h3>Разрешение путей контента (%ModDir%) в C# коде</h3>
+          <p>
+            В XML-файлах часто пишется путь вида <code>%ModDir%/Content/file.png</code>. Если вы передаёте такой путь в свой C#-код, стандартный метод <code>File.Exists("%ModDir%/...")</code> вернёт <code>false</code>! Для получения реального абсолютного пути к файлу на диске используйте встроенный API движка:
+          </p>
+          <div class="code-wrapper">
+            <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+            <pre><code>// 1. Быстрое разрешение через ContentPath движка:
+string realPath = ContentPath.FromRaw(rawXmlPath).Value;
+
+// 2. Если файл находится в другом моде или пакете контента:
+if (!File.Exists(realPath) && ContentPackageManager.AllPackages != null)
+{
+    string subPath = rawXmlPath.Replace("%ModDir%/", "").Replace("%ModDir%\\", "").TrimStart('/', '\\');
+    foreach (var pkg in ContentPackageManager.AllPackages)
+    {
+        if (pkg?.Dir != null)
+        {
+            string candidate = Path.Combine(pkg.Dir, subPath);
+            if (File.Exists(candidate)) { realPath = Path.GetFullPath(candidate); break; }
+        }
+    }
+}</code></pre>
+          </div>
+        </div>
       </section>
 
       <!-- Section: Examples Gallery -->
@@ -555,6 +596,15 @@ seService.RegisterAction(new StatusEffectActionFactory("Broadcast",
 &lt;/Item&gt;</code></pre>
               </div>
             </div>
+          </div>
+
+          <div class="tip-box" style="margin-top: 15px; border-left-color: #ef4444;">
+            <strong>⚠️ Ловушка с падением FPS при использовании в афликшенах:</strong><br>
+            Внимание: если кастомное действие вызывается внутри <code>&lt;Affliction&gt;&lt;Effect&gt;</code>, Barotrauma выполняет блок <code>&lt;StatusEffect&gt;</code> <strong>каждый тиковый кадр (60 раз в секунду)</strong> всё время, пока сила эффекта находится в диапазоне <code>minstrength..maxstrength</code>.<br>
+            Если ваш <code>IStatusEffectAction</code> воспроизводит видео, спавнит звуки или выделяет неуправляемые ресурсы, <strong>всегда делайте проверку состояния или кулдаун</strong>:
+            <pre style="margin-top: 8px;"><code>// Защита от спама 60 вызовов в секунду:
+if (_isPlaying || _cooldownTimer > 0f) { return; }</code></pre>
+            Без этой проверки игра каждую секунду попытается создать десятки параллельных ресурсов, что мгновенно просадит <strong>FPS до 1</strong> и приведет к зависанию!
           </div>
         </div>
 
@@ -787,6 +837,62 @@ public static class OxygenPatch
 // В методе Plugin.Init() запускаем патчинг:
 PluginServiceProvider.GetService&lt;IHarmonyProvider&gt;().PatchAll();</code></pre>
           </div>
+
+          <div class="card" style="margin-top: 20px;">
+            <h4>🎨 Практический рецепт: Отрисовка HUD, оверлеев и видео через Harmony</h4>
+            <p>
+              <strong>Ловушка с GUI.Canvas:</strong> В Barotrauma <code>GUI.Canvas</code> — это <code>RectTransform</code>, а не полноценный компонент. Движок игры перед каждым кадром полностью очищает <code>GUI.updateList</code>. Поэтому если вы просто создадите <code>new GUICustomComponent(..., GUI.Canvas)</code>, его методы <code>Draw()</code> и <code>Update()</code> <strong>никогда не будут вызваны движком</strong>!<br>
+              Самый надёжный и высокопроизводительный способ отрисовать свой интерфейс или оверлей поверх игры — перехватить методы <code>GUI.Draw</code> и <code>GUI.Update</code> через Harmony:
+            </p>
+            <div class="code-wrapper">
+              <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+              <pre><code>using HarmonyLib;
+using Barotrauma;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace MyAwesomeMod;
+
+[HarmonyPatch(typeof(GUI), nameof(GUI.Draw))]
+public static class GUIDrawPatch
+{
+    // Вызывается в конце каждого кадра отрисовки интерфейса (SpriteBatch уже открыт!)
+    [HarmonyPostfix]
+    public static void Postfix(Camera cam, SpriteBatch spriteBatch)
+    {
+        // Защищаем ScissorRectangle, чтобы оверлей не обрезался окнами чата или субмарины
+        var prevScissor = spriteBatch.GraphicsDevice.ScissorRectangle;
+        try
+        {
+            spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
+            // Отрисовка поверх всего интерфейса:
+            // spriteBatch.Draw(myTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+            MyCustomOverlay.Draw(spriteBatch);
+        }
+        finally
+        {
+            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissor;
+        }
+    }
+}
+
+[HarmonyPatch(typeof(GUI), nameof(GUI.Update))]
+public static class GUIUpdatePatch
+{
+    // Вызывается каждый кадр из главного цикла игры GameMain.Update
+    [HarmonyPostfix]
+    public static void Postfix(float deltaTime)
+    {
+        // Обновление таймеров, логики и опрос нажатий клавиш:
+        MyCustomOverlay.Update(deltaTime);
+    }
+}</code></pre>
+            </div>
+            <div class="tip-box">
+              <strong>Преимущество:</strong> При выгрузке мода движок <code>IHarmonyProvider</code> <strong>автоматически снимает все созданные патчи</strong>, предотвращая любые утечки памяти.
+            </div>
+          </div>
         </div>
 
         <!-- Example 8: ExtraFields -->
@@ -842,6 +948,15 @@ if (campaign.Map.GetExtraField&lt;MyCustomData&gt;("MyModCampaignState") is { } 
               <li>При срабатывании игра встанет на паузу, и вы сможете исследовать стек вызовов, значения переменных и состояние мира.</li>
             </ul>
           </div>
+        </div>
+
+        <div class="card info-card" style="margin-top: 15px;">
+          <div class="card-icon">💡</div>
+          <h3>Лайфхак: Блокировка DLL в Windows при компиляции</h3>
+          <p>
+            Когда Barotrauma запущена, Windows намертво блокирует загруженные <code>.dll</code> файлы на перезапись, и при повторной компиляции сборщик выдаёт ошибку <em>MSB3027: Файл занят другим процессом</em>.<br>
+            <strong>Решение без закрытия игры:</strong> В Windows заблокированную работающим процессом DLL <strong>можно переименовать</strong> (например, в <code>MyModClient.dll.old</code>)! После переименования вы можете сразу скомпилировать или скопировать на её место свежую версию без перезапуска всей ОС.
+          </p>
         </div>
       </section>
 
@@ -917,6 +1032,21 @@ dotnet run --project PluginToolbox -- --build</code></pre>
             <input type="checkbox" onchange="updateChecklistProgress()">
             <span class="checkmark"></span>
             <span class="check-text">Выполнена мультиплатформенная сборка <code>dotnet run --project PluginToolbox -- --build</code>.</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">В сборке объявлены обязательные метаданные (Authors, GameVersion, Version).</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">Для доступа к приватным полям (Publicized) добавлен атрибут IgnoresAccessChecksTo.</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" onchange="updateChecklistProgress()">
+            <span class="checkmark"></span>
+            <span class="check-text">Для действий StatusEffect внутри афликшенов добавлена защита от повторного срабатывания каждый тик.</span>
           </label>
           <label class="check-item">
             <input type="checkbox" onchange="updateChecklistProgress()">
