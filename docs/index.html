@@ -13,29 +13,19 @@
 <body class="dark-theme">
 
   <!-- Header & Navigation -->
-  <!-- Header & Navigation -->
   <header class="site-header">
     <div class="header-inner">
-      <div class="header-left">
-        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Открыть оглавление" title="Открыть оглавление">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+            <path d="M2 12h20"></path>
           </svg>
-        </button>
-        <div class="brand">
-          <div class="brand-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-              <path d="M2 12h20"></path>
-            </svg>
-          </div>
-          <div class="brand-text">
-            <span class="brand-title">BAROTRAUMA</span>
-            <span class="brand-badge">C# PLUGIN DOCS</span>
-          </div>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">BAROTRAUMA</span>
+          <span class="brand-badge">C# PLUGIN DOCS</span>
         </div>
       </div>
 
@@ -63,21 +53,8 @@
   </header>
 
   <div class="layout-container">
-    <!-- Overlay for mobile drawer -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation for Desktop -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header-mobile">
-        <span class="sidebar-mobile-title">МЕНЮ РАЗДЕЛОВ</span>
-        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Закрыть меню">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-
       <nav class="sidebar-nav">
         <div class="nav-section">
           <div class="nav-section-title">ВВЕДЕНИЕ</div>
@@ -118,6 +95,48 @@
 
     <!-- Main Content Area -->
     <main class="main-content">
+
+      <!-- Mobile Table of Contents (shown only on mobile/tablets) -->
+      <details class="mobile-toc">
+        <summary class="mobile-toc-summary">
+          <span class="mobile-toc-icon">📑</span>
+          <span>Оглавление гайда (быстрый переход)</span>
+          <span class="mobile-toc-arrow">▼</span>
+        </summary>
+        <div class="mobile-toc-body">
+          <div class="mobile-toc-group">
+            <div class="mobile-toc-header">ВВЕДЕНИЕ</div>
+            <a href="#overview" class="mobile-toc-link">Обзор системы</a>
+            <a href="#requirements" class="mobile-toc-link">Требования и софт</a>
+            <a href="#quickstart" class="mobile-toc-link">Быстрый старт</a>
+          </div>
+          <div class="mobile-toc-group">
+            <div class="mobile-toc-header">СТРУКТУРА И МАНИФЕСТЫ</div>
+            <a href="#project-structure" class="mobile-toc-link">Архитектура папок</a>
+            <a href="#props-config" class="mobile-toc-link">Конфигурация .props</a>
+            <a href="#manifests" class="mobile-toc-link">filelist.xml и PluginInfo.xml</a>
+            <a href="#lifecycle" class="mobile-toc-link">Жизненный цикл плагина</a>
+          </div>
+          <div class="mobile-toc-group">
+            <div class="mobile-toc-header">ПРИМЕРЫ (EXAMPLES HUB)</div>
+            <a href="#example-item-component" class="mobile-toc-link">1. Кастомный ItemComponent</a>
+            <a href="#example-status-effect" class="mobile-toc-link">2. Status Effect Action</a>
+            <a href="#example-networking" class="mobile-toc-link">3. Сетевой обмен (Client/Server)</a>
+            <a href="#example-settings" class="mobile-toc-link">4. Настройки в меню игры</a>
+            <a href="#example-hooks" class="mobile-toc-link">5. Встроенные хуки игры</a>
+            <a href="#example-prefabs" class="mobile-toc-link">6. Кастомные XML префабы</a>
+            <a href="#example-harmony" class="mobile-toc-link">7. Патчинг HarmonyX</a>
+            <a href="#example-extrafields" class="mobile-toc-link">8. ExtraFields (состояние)</a>
+          </div>
+          <div class="mobile-toc-group">
+            <div class="mobile-toc-header">РАЗРАБОТКА И РЕЛИЗ</div>
+            <a href="#debugging-hotreload" class="mobile-toc-link">Отладка и Hot Reload</a>
+            <a href="#build-release" class="mobile-toc-link">Мультиплатформенная сборка</a>
+            <a href="#memory-leaks" class="mobile-toc-link">Выгрузка и утечки памяти</a>
+            <a href="#checklist" class="mobile-toc-link">Чеклист готовности</a>
+          </div>
+        </div>
+      </details>
 
       <!-- Hero Banner -->
       <section class="hero-section">
@@ -1101,22 +1120,7 @@ dotnet run --project PluginToolbox -- --build</code></pre>
         <a href="https://github.com/FakeFishGames/ExamplesBaroPlugin" target="_blank">ExamplesBaroPlugin</a>
       </div>
     </div>
-  <!-- Floating Actions for Mobile & Quick Navigation -->
-  <div class="mobile-floating-actions" id="mobileFloatingActions">
-    <button class="fab-btn" id="fabMenuBtn" aria-label="Открыть оглавление">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
-      <span>Меню</span>
-    </button>
-    <button class="fab-btn back-to-top" id="backToTop" aria-label="Наверх" title="Наверх">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="18 15 12 9 6 15"></polyline>
-      </svg>
-    </button>
-  </div>
+  </footer>
 
   <script src="app.js"></script>
 </body>
