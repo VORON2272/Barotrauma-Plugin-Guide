@@ -61,14 +61,64 @@ function updateChecklistProgress() {
   if (fillEl) fillEl.style.width = `${percent}%`;
 }
 
-// Real-time Search Logic
+// Mobile Drawer & Navigation Logic
 document.addEventListener('DOMContentLoaded', () => {
-  const searchInput = document.getElementById('docSearch');
-  const contentBlocks = document.querySelectorAll('.content-block, .example-card');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+  const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+  const fabMenuBtn = document.getElementById('fabMenuBtn');
+  const backToTopBtn = document.getElementById('backToTop');
   const navLinks = document.querySelectorAll('.nav-link');
+  const contentBlocks = document.querySelectorAll('.content-block, .example-card');
+  const searchInput = document.getElementById('docSearch');
 
+  function openSidebar() {
+    if (sidebar) sidebar.classList.add('open');
+    if (sidebarOverlay) sidebarOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Lock background scroll on phones
+  }
+
+  function closeSidebar() {
+    if (sidebar) sidebar.classList.remove('open');
+    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openSidebar);
+  if (fabMenuBtn) fabMenuBtn.addEventListener('click', openSidebar);
+  if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
+  if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+
+  // Close drawer when clicking any link inside sidebar on mobile
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 1024) {
+        closeSidebar();
+      }
+    });
+  });
+
+  // Back to Top logic
+  if (backToTopBtn) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 350) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    }, { passive: true });
+
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  }
+
+  // Real-time Search Logic
   if (searchInput) {
-    // Keyboard shortcut: Ctrl+K or / to focus search
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && document.activeElement !== searchInput)) {
         e.preventDefault();
@@ -111,29 +161,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ScrollSpy for Sidebar
+  let scrollTimeout;
   window.addEventListener('scroll', () => {
-    let current = '';
-    const scrollY = window.pageYOffset;
+    if (scrollTimeout) return;
+    scrollTimeout = setTimeout(() => {
+      scrollTimeout = null;
+      let current = '';
+      const scrollY = window.pageYOffset;
 
-    contentBlocks.forEach(block => {
-      const top = block.offsetTop - 120;
-      const height = block.offsetHeight;
-      const id = block.getAttribute('id');
+      contentBlocks.forEach(block => {
+        const top = block.offsetTop - 140;
+        const height = block.offsetHeight;
+        const id = block.getAttribute('id');
 
-      if (id && scrollY >= top && scrollY < top + height) {
-        current = id;
-      }
-    });
-
-    if (current) {
-      navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === `#${current}`) {
-          link.classList.add('active');
+        if (id && scrollY >= top && scrollY < top + height) {
+          current = id;
         }
       });
-    }
-  });
+
+      if (current) {
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+          }
+        });
+      }
+    }, 100);
+  }, { passive: true });
 
   // Smooth anchor scrolling
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
